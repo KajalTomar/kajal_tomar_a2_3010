@@ -1,9 +1,28 @@
+<!DOCTYPE html>
+
 <html>
 	<head>
 		<title>3010-eeter</title>
+		
+		 <script type="text/javascript" src="http://localhost:8080/data.js"></script>
+		 <script type="text/javascript" src="http://localhost:8080/main.js"></script>
 	</head>
 
 	<body>
 		<h1>3010-eeter</h1>
+		
+		<div id='loginContainer'>
+			<label for=username>Username:</label>
+			<input type='text' id='username' name='username'> 
+			<br><br>	
+			<label for=password>Password:</label>
+			<input type='text' id='password' name='password'> 
+			<br><br>	
+			<button type='button' id='submitButton' onclick='login()'>submit</button>
+		</div>
+
+		<div id='tweetContainer'>
+			
+		</div>
 	</body>
 </html>
