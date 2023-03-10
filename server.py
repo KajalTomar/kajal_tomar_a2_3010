@@ -19,7 +19,7 @@ except Exception as e:
 	traceback.print_exc()
 
 HOST = ''
-PORT = 8080
+PORT = 8888
 
 status200 = 'HTTP/1.1 200 OK\n'
 status400 = 'HTTP/1.1 400 Bad Request\n'
@@ -43,44 +43,48 @@ def getRequestedFile(thePath):
 	print('> Getting the requested file: '+thePath)
 	fileName = ''
 	contentType=''
-	if(thePath == '/index.html'):
-		fileName  = 'index.html' # return  the index file by default
-		contentType = 'Content-Type: text/html'		
+	if(thePath == '/index.html' or thePath == '/'):
+		fileName  = './webFiles/index.html' # return  the index file by default
+		contentType = 'Content-Type: text/html\n'		
 	elif(thePath == '/main.js'):
-		fileName = 'main.js'
-		contentType = 'Content-Type: text/javascript' 
-	elif(thePath == '/data.js'):
-		fileName = 'data.js'
-		contentType = 'Content-Type: text/javascript' 
+		fileName = './webFiles/main.js'
+		contentType = 'Content-Type: text/javascript\n' 
 	else:
 		imageExtensions = ['.jpg', '.jpeg', '.png', '.tiff', '.gif']
+		textExtensions = ['.css', '.csv', '.html', '.javascript', '.plain', '.xml']
+		
 		fileName, fileExtension = os.path.splitext(thePath)
-		fileName = thePath	
+		fileName = './webFiles'+thePath	
 		if(fileExtension in imageExtensions):
 			fileExtension = (fileExtension.split('.'))[1]
-			contentType = 'Content-Type: image/'+fileExtension 
+			contentType = 'Content-Type: image/'+fileExtension+'\n'
+		elif(fileExtension in textExtensions):
+			fileExtension = (fileExtension.split('.'))[1]
+			contentType = 'Content-Type: text/'+fileExtension+'\n'
 
 	try:
+		print(fileName)
 		if(fileName != ''):
-			print('> '+contentType)
-			print('> Getting content from ' +fileName)
-			file = open(fileName, 'rb')
-			response = file.read()
-			file.close()
+			try:
+				with open(fileName, 'rb') as myFile:
+					print('opening file')
+					response = myFile.read()
+					fileLength = 'Content-Length:'+str(len(response))
+			
+					header = status200+contentType+fileLength+'\n\n'
+					header = header.encode('utf-8','ignore')
 
-			header = status200+contentType+'\n\n'
-			header = header.encode('utf-8','ignore')
-
-			response = header + response
+					response = header + response
+			except Exception as e:
+				reponse =  (status404).encode('utf-8','ignore')
 		else:
+			print('> file foes not exist')
 			response = (status404).encode('utf-8','ignore')
 	#	print(response.decode('utf-8','ignore'))
 	except Exception as e:
 		# could not open the file
 		#response = 'File not found'
 		#response = response.encode('utf-8','ignore')
-		print(e)
-		traceback.print_exc()
 		response = (status404).encode('utf-8','ignore')
 
 	return response
@@ -95,9 +99,9 @@ def resolveGetMethod(message, command):
 	response = status200
 	if(command.lower() == 'tweet'):
 		try:
-			sessionID = message.split('sessionID=')[1]
+			sessionID = (message.split('sessionID='))[1]
+			sessionID = (sessionID.split(';'))[0]
 			sessionID = sessionID.strip()
-			
 			statement = "SELECT username FROM users WHERE signed_in=1 AND cookie='"+sessionID+"'"
 			cur.execute(statement)
 			dbConn.commit()
@@ -113,7 +117,6 @@ def resolveGetMethod(message, command):
 					resultJson = json.dumps([{"tweet": result[0], "byUser": result[1], "id": str(result[2])} for result in results])
 					header = status200+'Content-Type: application/json\nContent-Length:'+str(len(resultJson))+'\n\n'
 					response = header.encode('utf-8','ignore') + resultJson.encode('utf-8','ignore')
-					print(response)
 			else:
 				response = status404
 		except Exception as e:
@@ -142,14 +145,9 @@ def resolvePostMethod(message, command):
 				username = messageBody['username'].strip()
 				password = messageBody['password'].strip()
 				if(username and password):
-					print('> username: '+username)
-					print('> password: '+password)
 					statement = "SELECT * FROM users where username ='"+username+"' AND password='"+password+"'" 
-					print('> statement: '+statement)
 					cur.execute(statement)
 					result = cur.fetchall()
-					print('> query result')
-					print(result)
 					
 					if(len(result) > 0):
 						if(result[0][2] == 0 and not result[0][3]):
@@ -162,7 +160,6 @@ def resolvePostMethod(message, command):
 						
 							if(result >= 1):
 								print('> '+username+' is logged in.')
-								print('> cookies =  '+cookie)
 								response = status200+'Set-Cookie: sessionID='+cookie+'expires=2147483647;\n\n'
 								#response = status200+"{'Set-Cookie': 'sessionID="+cookie+"'}\n\n"
 							else:
@@ -180,7 +177,7 @@ def resolvePostMethod(message, command):
 					response = status400
 			else:
 				# the body did not have a username and password field
-				print('> did not get all the login details. This is what I got: '+message)
+				print('> did not get all the login details.')
 				response = status400
 		except Exception as e:
 			response = status500
@@ -191,7 +188,9 @@ def resolvePostMethod(message, command):
 		try:
 			body = message.split('\r\n\r\n')[1]
 			sessionID = (message.split('sessionID='))[1]
-			sessionID = ((sessionID.split('\r\n'))[0]).strip()
+			#sessionID = ((sessionID.split('\r\n'))[0]).strip()
+			sessionID = (sessionID.split(';'))[0]
+			sessionID = sessionID.strip()
 			if(len(body) > 1 and sessionID):
 				messageBody = json.loads(body)
 				tweet = messageBody['tweet'].strip()
@@ -234,18 +233,13 @@ def resolveDeleteMethod(message, command, tweetID):
 	global status500
 	
 	print('> IN DELETE METHOD')
-	print('> command = '+command)
-	print('> tweetID = '+tweetID)
-	print('> message = ')
-	print(message)
-
 
 	response = status200
 	if(command.lower() == 'logout'):
 		try:
 			sessionID = message.split('sessionID=')[1]
+			sessionID = (sessionID.split(';'))[0]
 			sessionID = sessionID.strip()
-			print('> sessionID = '+sessionID)
 			statement = "UPDATE users SET cookie='', signed_in=0 WHERE cookie='"+sessionID+"'"
 			cur.execute(statement)
 			dbConn.commit()
@@ -257,6 +251,7 @@ def resolveDeleteMethod(message, command, tweetID):
 	elif(command.lower() == 'tweet'):
 		try:
 			sessionID = message.split('sessionID=')[1]
+			sessionID = (sessionID.split(';'))[0]
 			sessionID = sessionID.strip()
 			
 			statement = "SELECT username FROM users WHERE signed_in=1 AND cookie='"+sessionID+"'"
@@ -287,11 +282,32 @@ def resolveDeleteMethod(message, command, tweetID):
 
 	return(response.encode('utf-8','ignore'))
 
+# --------------------------------------------------------
+# bindToRandomPort(socket)
+#
+# Purpose: binds the socket to an available port
+# Parameter: socket to bind
+# Returns: the port number that the socket is bound to
+# --------------------------------------------------------
+def bindToRandomPort(s):
+	result = -1
+	while result != 0:
+		try:
+			result = s.bind((HOST,0))
+			return s.getsockname()[1]
+		except socket.error as e:
+			pass
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-	s.bind((HOST, PORT))
+	try:
+		s.bind((HOST, PORT))
+		print('> listening on port: '+str(PORT))
+	except socket.error as e:
+		PORT = bindToRandomPort(s)
+		print('The requested port was in already use. Using port '+str(PORT))
+	
 	s.listen()
-	#print('listening on '+socket.gethostname())
+	s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	try:
 		while True:
 			conn, addr = s.accept()
@@ -305,24 +321,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 					
 					if(len(message) > 1):
 						method = message[0]
-						print('> Method: '+method)
 						path = message[1].split('/')
-						#print('the path: ')
-						#print(path)
 						if(method == 'GET'):
 							if(path[1].lower() == 'api'):
-								print('> Deal with GET')
 								conn.send(resolveGetMethod(messageRecvd, path[2]))
 							else:
 								theResponse = getRequestedFile(message[1])
 								if(theResponse):
 									conn.send(theResponse)
 						elif(method == 'POST' and path[1].lower() == 'api'):
-							print('> Deal with POST')
 							conn.send(resolvePostMethod(messageRecvd, path[2]))
 							# theResponse = resolvePostMethod(message[1], path[2])
 						elif(method == 'DELETE'):
-							print('> Deal with DELETE')
 							print(path)
 							if(path[2].lower() == 'tweet'):
 								conn.send(resolveDeleteMethod(messageRecvd, path[2], path[3]))

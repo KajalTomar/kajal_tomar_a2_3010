@@ -1,4 +1,4 @@
-const BASE_PATH = 'http://localhost:8080'
+const BASE_PATH = ''
 
 window.onload = function () {
 	// check if already logged in
@@ -27,7 +27,7 @@ function login()
 	
 	var xhr = new XMLHttpRequest();
 	xhr.addEventListener("load", loadedEventCallback);
-	path = BASE_PATH+'/api/login'
+	path = '/api/login'
 	xhr.open("POST", path, true);
 	xhr.setRequestHeader('Content-Type', 'text/html');
 	xhr.send(JSON.stringify({
@@ -55,7 +55,7 @@ function logout()
 
 	var xhr = new XMLHttpRequest();
 	xhr.addEventListener("load", loadedEventCallback);
-	path = BASE_PATH+'/api/logout'
+	path = '/api/logout'
 	xhr.open("DELETE", path, true);
 	xhr.send()
 }
@@ -103,9 +103,9 @@ function getTweets()
 
 	var xhr = new XMLHttpRequest();
 	xhr.addEventListener("load", loadedEventCallback);
-	path = BASE_PATH+'/api/tweet'
+	path = '/api/tweet'
 	xhr.open("GET", path, true);
-	xhr.send()
+	xhr.send();
 }
 
 function postTweet()
@@ -127,7 +127,7 @@ function postTweet()
 	
 		var xhr = new XMLHttpRequest();
 		xhr.addEventListener("load", loadedEventCallback);
-		path = BASE_PATH+'/api/tweet'
+		path = '/api/tweet'
 		xhr.open("POST", path, true);
 		xhr.setRequestHeader('Content-Type', 'text/html');
 		xhr.send(JSON.stringify({
@@ -152,7 +152,7 @@ function deleteTweet(tweetID)
 
 	var xhr = new XMLHttpRequest();
 	xhr.addEventListener("load", loadedEventCallback);
-	path = BASE_PATH+'/api/tweet/'+tweetID
+	path = '/api/tweet/'+tweetID
 	xhr.open("DELETE", path, true);
 	xhr.send();
 }
