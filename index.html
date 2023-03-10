@@ -4,25 +4,34 @@
 	<head>
 		<title>3010-eeter</title>
 		
-		 <script type="text/javascript" src="http://localhost:8080/data.js"></script>
+		<!-- <script type="text/javascript" src="http://localhost:8080/data.js"></script> -->
 		 <script type="text/javascript" src="http://localhost:8080/main.js"></script>
 	</head>
 
 	<body>
-		<h1>3010-eeter</h1>
-		
-		<div id='loginContainer'>
+		<div id='loginContainer' style='display:none'>
+			<h1>3010-eeter Login</h1>
 			<label for=username>Username:</label>
 			<input type='text' id='username' name='username'> 
 			<br><br>	
 			<label for=password>Password:</label>
 			<input type='text' id='password' name='password'> 
 			<br><br>	
-			<button type='button' id='submitButton' onclick='login()'>submit</button>
+			<button type='button' id='loginButton' onclick='login()'>LOGIN</button>
 		</div>
 
-		<div id='tweetContainer'>
+		<div id='homepage' style='display:none'>
+			<button type='button' id='logoutButton' onclick='logout()'>LOGOUT</button>
+			<h1>3010-eeter Login</h1>
+			<h3 id='theTitle'></h3>
+			<textarea id=newTweet rows="3" cols="100" placeholder="What's on your mind?"></textarea>
+			<br><br>
+			<button type='button' id='postTweet' onclick='postTweet()'>POST</button>
 			
+			<br><br>
+			<hr>
+			<table id='tweetTable' style="width=100%">
+			</table>
 		</div>
 	</body>
 </html>
