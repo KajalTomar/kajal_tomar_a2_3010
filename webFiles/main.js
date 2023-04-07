@@ -43,13 +43,10 @@ function logout()
 	{
 		console.log('status =' +xhr.status)
 
-		if(xhr.status == 200)
-		{
-			localStorage.removeItem('loggedIn');
-			showLoginPage();
-			table = document.getElementById('tweetTable');
-			table.innerHTML="";
-		}
+		localStorage.removeItem('loggedIn');
+		showLoginPage();
+		table = document.getElementById('tweetTable');
+		table.innerHTML="";
 	}
 	
 
